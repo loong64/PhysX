@@ -23,7 +23,7 @@ copy_optional() {
 
 # Check if two arguments are passed
 if [ "$#" -ne 2 ]; then
-    error_exit "Usage: $0 <preset> <build_config>. Example: $0 linux-aarch64-gcc debug"
+    error_exit "Usage: $0 <preset> <build_config>. Example: $0 linux-loongarch64-gcc-cpu-only release"
 fi
 
 # Assign arguments

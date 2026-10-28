@@ -110,7 +110,7 @@ struct PxsIndexedContactManager : public PxsIndexedInteraction	// 32
 	
 	PxsIndexedContactManager(PxsContactManager* cm) : contactManager(cm) {}
 };
-#if !PX_X64
+#if !PX_P64_FAMILY
 PX_COMPILE_TIME_ASSERT(0==(sizeof(PxsIndexedContactManager) & 0x0f));
 #endif
 

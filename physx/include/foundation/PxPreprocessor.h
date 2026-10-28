@@ -89,6 +89,8 @@ Architecture defines, see http://sourceforge.net/p/predef/wiki/Architectures/
 	#define PX_X86 1
 #elif defined(__arm64__) || defined(__aarch64__) || defined(_M_ARM64)
 	#define PX_A64 1
+#elif defined(__loongarch64) || defined(__loongarch__)
+	#define PX_LA64 1
 #elif defined(__arm__) || defined(_M_ARM)
 	#define PX_ARM 1
 #elif defined(__ppc__) || defined(_M_PPC) || defined(__CELLOS_LV2__)
@@ -148,6 +150,9 @@ define anything not defined on this platform to 0
 #ifndef PX_A64
 	#define PX_A64 0
 #endif
+#ifndef PX_LA64
+	#define PX_LA64 0
+#endif
 #ifndef PX_ARM
 	#define PX_ARM 0
 #endif
@@ -204,7 +209,7 @@ family shortcuts
 // architecture
 #define PX_INTEL_FAMILY (PX_X64 || PX_X86)
 #define PX_ARM_FAMILY (PX_ARM || PX_A64)
-#define PX_P64_FAMILY (PX_X64 || PX_A64) // shortcut for 64-bit architectures
+#define PX_P64_FAMILY (PX_X64 || PX_A64 || PX_LA64) // shortcut for 64-bit architectures
 
 /**
 C++ standard library defines

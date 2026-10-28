@@ -9,9 +9,6 @@ cmake_minimum_required(VERSION 3.21)
 
 set(PHYSX_PRESET "" CACHE STRING "PhysX build preset (e.g., vc17win64, linux-gcc, vc17win64-cpu-only)")
 
-# GPU options must be set before project() to determine CUDA language requirement
-option(PX_GENERATE_GPU_PROJECTS "Generate GPU projects" ON)
-
 # Apply preset switches (PX_GENERATE_GPU_PROJECTS, etc.) BEFORE project() so that
 # cpu-only presets can disable CUDA without requiring a separate command-line flag.
 # Parameters (CMAKE_INSTALL_PREFIX) are applied in phase 2 after project().
@@ -19,6 +16,11 @@ if(PHYSX_PRESET)
   include("${CMAKE_CURRENT_LIST_DIR}/buildtools/cmake/PhysXPresets.cmake")
   physx_apply_preset_switches(${PHYSX_PRESET})
 endif()
+
+# GPU options must be set before project() to determine CUDA language requirement.
+# Declare the default after preset parsing so a preset value is not shadowed by
+# option() creating the cache entry first; explicit -D values still win.
+option(PX_GENERATE_GPU_PROJECTS "Generate GPU projects" ON)
 
 # Detect top-level before project() - PROJECT_IS_TOP_LEVEL is only available
 # after project() is called, so we check manually here.
@@ -199,7 +201,9 @@ if(NOT DEFINED PX_OUTPUT_ARCH)
   if(TARGET_BUILD_PLATFORM STREQUAL "windows" OR TARGET_BUILD_PLATFORM STREQUAL "mac")
     set(PX_OUTPUT_ARCH "x86" CACHE INTERNAL "Output architecture")
   elseif(TARGET_BUILD_PLATFORM STREQUAL "linux")
-    if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "loongarch64|loongarch")
+      set(PX_OUTPUT_ARCH "loongarch64" CACHE INTERNAL "Output architecture")
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
       set(PX_OUTPUT_ARCH "arm" CACHE INTERNAL "Output architecture")
     else()
       set(PX_OUTPUT_ARCH "x86" CACHE INTERNAL "Output architecture")
@@ -478,6 +482,12 @@ foreach(lib IN ITEMS PhysX PhysXCommon PhysXFoundation PhysXExtensions PhysXPvdS
     endif()
   endif()
 endforeach()
+
+# Static Linux consumers need libm after the PhysX archives so powf and other
+# math symbols are resolved regardless of the archive dependency order.
+if(UNIX AND TARGET_BUILD_PLATFORM STREQUAL "linux")
+  target_link_libraries(physx_lib INTERFACE m)
+endif()
 
 # Public API include paths for physx_lib consumers.
 # Individual PhysX targets set their includes as PRIVATE, so transitive propagation

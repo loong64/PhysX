@@ -159,6 +159,8 @@ class CMakePreset:
             return False
         elif self.targetPlatform == 'linuxAarch64':
             return False
+        elif self.targetPlatform == 'linuxLoongArch64':
+            return False
         elif self.compiler == 'x86_64-w64-mingw32-g++':
             return False
         return True
@@ -252,7 +254,7 @@ class CMakePreset:
         elif self.compiler == 'xcode':
             outString = outString + '-G Xcode'
         # Linux
-        elif self.targetPlatform in ['linux', 'linuxAarch64']:
+        elif self.targetPlatform in ['linux', 'linuxAarch64', 'linuxLoongArch64']:
             if self.generator is not None and self.generator == 'ninja':
                 outString = outString + '-G \"Ninja\"'
                 outString = outString + ' -DCMAKE_MAKE_PROGRAM=' + os.environ['PM_ninja_PATH'] + '/ninja'
@@ -313,6 +315,16 @@ class CMakePreset:
                     outString = outString + ' -DCMAKE_C_COMPILER=clang'
                     outString = outString + ' -DCMAKE_CXX_COMPILER=clang++'
             
+            return outString
+        elif self.targetPlatform == 'linuxLoongArch64':
+            outString = outString + ' -DTARGET_BUILD_PLATFORM=linux'
+            outString = outString + ' -DPX_OUTPUT_ARCH=loongarch64'
+            if self.compiler == 'gcc':
+                outString = outString + ' -DCMAKE_C_COMPILER=gcc'
+                outString = outString + ' -DCMAKE_CXX_COMPILER=g++'
+            elif self.compiler == 'clang':
+                outString = outString + ' -DCMAKE_C_COMPILER=clang'
+                outString = outString + ' -DCMAKE_CXX_COMPILER=clang++'
             return outString
         elif self.targetPlatform == 'mac64':
             outString = outString + ' -DTARGET_BUILD_PLATFORM=mac'

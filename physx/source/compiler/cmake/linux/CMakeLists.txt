@@ -81,6 +81,11 @@ SET(GCC_WARNINGS "-Wall -Werror \
 	-Wno-use-after-free \
 ")
 
+IF(CMAKE_SYSTEM_PROCESSOR MATCHES "loongarch64|loongarch")
+	# GCC 16 reports a false positive for PhysX's intrusive ref-counted objects.
+	SET(GCC_WARNINGS "${GCC_WARNINGS} -Wno-free-nonheap-object")
+ENDIF()
+
 IF(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
 	# gw: these optimizations are disabled for now. fp-contract causes floating point inaccuracy and deviation in behavior,
 	# tree-vrp and delete-null-pointer-checks cause known bugs on some versions of gcc
@@ -144,7 +149,15 @@ IF(NOT PX_GENERATE_GPU_PROJECTS_ONLY AND NOT PX_GENERATE_GPU_PROJECTS)
 	SET(DISABLE_CUDA_DEF "DISABLE_CUDA_PHYSX")
 ENDIF()
 
-SET(PHYSX_LINUX_COMPILE_DEFS "${PHYSX_AUTOBUILD};${PUBLIC_RELEASE_FLAG};${DISABLE_CUDA_DEF}" CACHE INTERNAL "Base PhysX preprocessor definitions")
+# LoongArch64 currently uses the scalar math backend exclusively. Keep the
+# explicit switch available for other Linux targets as well.
+IF(PX_SCALAR_MATH OR CMAKE_SYSTEM_PROCESSOR MATCHES "loongarch64|loongarch")
+	SET(SCALAR_MATH_FLAG "PX_SIMD_DISABLED")
+ELSE()
+	SET(SCALAR_MATH_FLAG "")
+ENDIF()
+
+SET(PHYSX_LINUX_COMPILE_DEFS "${PHYSX_AUTOBUILD};${PUBLIC_RELEASE_FLAG};${DISABLE_CUDA_DEF};${SCALAR_MATH_FLAG}" CACHE INTERNAL "Base PhysX preprocessor definitions")
 SET(PHYSX_LINUX_DEBUG_COMPILE_DEFS   "PX_DEBUG=1;PX_CHECKED=1;${NVTX_FLAG};PX_SUPPORT_PVD=1;${PX_SUPPORT_OMNI_PVD_FLAG}"  CACHE INTERNAL "Debug PhysX preprocessor definitions")
 SET(PHYSX_LINUX_CHECKED_COMPILE_DEFS "NDEBUG;PX_CHECKED=1;${NVTX_FLAG};PX_SUPPORT_PVD=1;${PX_SUPPORT_OMNI_PVD_FLAG}" CACHE INTERNAL "Checked PhysX preprocessor definitions")
 SET(PHYSX_LINUX_PROFILE_COMPILE_DEFS "NDEBUG;PX_PROFILE=1;${NVTX_FLAG};PX_SUPPORT_PVD=1;${PX_SUPPORT_OMNI_PVD_FLAG}"  CACHE INTERNAL "Profile PhysX preprocessor definitions")
